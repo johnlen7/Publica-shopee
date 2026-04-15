@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>Shopee Video Automator</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-tertiary: #0f172a;
+      --bg-card: #182235;
+      --bg-card-hover: #1e2a40;
+
+      --accent-orange: #ee4d2d;
+      --accent-orange-2: #ff6b3d;
+      --accent-orange-soft: rgba(238, 77, 45, 0.15);
+
+      --accent-green: #10b981;
+      --accent-green-soft: rgba(16, 185, 129, 0.12);
+
+      --accent-blue: #3b82f6;
+      --accent-blue-soft: rgba(59, 130, 246, 0.12);
+
+      --accent-yellow: #f59e0b;
+      --accent-yellow-soft: rgba(245, 158, 11, 0.12);
+
+      --accent-purple: #8b5cf6;
+      --accent-red: #ef4444;
+      --accent-red-soft: rgba(239, 68, 68, 0.12);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #64748b;
+
+      --border: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.1);
+
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+
+      --sidebar-w: 270px;
+      --mobile-header-h: 68px;
+      --bottom-nav-h: 72px;
+
+      --content-max: 1440px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      min-width: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "DM Sans", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(59,130,246,0.08), transparent 28%),
+        radial-gradient(circle at top left, rgba(238,77,45,0.08), transparent 24%),
+        var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.7;
+      z-index: 0;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    img,
+    svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    button {
+      border: 0;
+      background: none;
+      cursor: pointer;
+      color: inherit;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+    }
+
+    /* Desktop sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: rgba(17, 24, 39, 0.92);
+      border-right: 1px solid var(--border);
+      display: none;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px 18px 18px;
+      overflow-y: auto;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-family: "Sora", sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-2));
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(238,77,45,0.35);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: "Sora", sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-text span {
+      color: var(--accent-orange);
+    }
+
+    .sidebar .logo {
+      margin-bottom: 28px;
+      padding: 0 8px;
+    }
+
+    .nav-section {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 14px 12px 8px;
+    }
+
+    .nav-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: var(--text-secondary);
+      transition: 0.22s ease;
+      text-align: left;
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.04);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--accent-orange-soft);
+      color: var(--accent-orange);
+      border: 1px solid rgba(238,77,45,0.18);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding: 16px 12px 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    }
+
+    .user-info strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .user-info span {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Mobile header */
+    .mobile-header {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      height: var(--mobile-header-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: rgba(17, 24, 39, 0.92);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .mobile-header .logo {
+      gap: 10px;
+    }
+
+    .mobile-header .logo-icon {
+      width: 34px;
+      height: 34px;
+      font-size: 14px;
+      border-radius: 10px;
+    }
+
+    .mobile-header .logo-text {
+      font-size: 15px;
+    }
+
+    .mobile-header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      transition: 0.2s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.94);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Main layout */
+    .main-shell {
+      flex: 1;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .main {
+      width: 100%;
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: 16px 14px calc(var(--bottom-nav-h) + 30px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .page {
+      display: none;
+      animation: fadeInUp 0.28s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .page-header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .page-title-wrap h1 {
+      font-family: "Sora", sans-serif;
+      font-size: clamp(22px, 4vw, 30px);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+
+    .page-title-wrap p {
+      margin-top: 6px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .btn {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-2));
+      box-shadow: 0 8px 24px rgba(238,77,45,0.25);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+      color: var(--text-primary);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    /* Cards */
+    .panel {
+      background: rgba(24,34,53,0.92);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-padding {
+      padding: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      font-family: "Sora", sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .section-title span {
+      color: var(--text-muted);
+      font-family: "DM Sans", sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+      background: rgba(24,34,53,0.95);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 120px;
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 2px;
+    }
+
+    .stat-card:nth-child(1)::before { background: var(--accent-orange); }
+    .stat-card:nth-child(2)::before { background: var(--accent-green); }
+    .stat-card:nth-child(3)::before { background: var(--accent-blue); }
+    .stat-card:nth-child(4)::before { background: var(--accent-yellow); }
+
+    .stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+
+    .stat-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    .stat-card:nth-child(1) .stat-icon {
+      background: var(--accent-orange-soft);
+      color: var(--accent-orange);
+    }
+    .stat-card:nth-child(2) .stat-icon {
+      background: var(--accent-green-soft);
+      color: var(--accent-green);
+    }
+    .stat-card:nth-child(3) .stat-icon {
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+    }
+    .stat-card:nth-child(4) .stat-icon {
+      background: var(--accent-yellow-soft);
+      color: var(--accent-yellow);
+    }
+
+    .stat-value {
+      font-family: "Sora", sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .stat-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .stat-change {
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .stat-change.up { color: var(--accent-green); }
+    .stat-change.warn { color: var(--accent-yellow); }
+
+    /* Responsive page content */
+    .content-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr;
+    }
+
+    /* Queue */
+    .queue-panel {
+      overflow: hidden;
+    }
+
+    .queue-table-wrap {
+      display: none;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .queue-table {
+      width: 100%;
+      min-width: 680px;
+      border-collapse: collapse;
+    }
+
+    .queue-table th {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 0 12px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .queue-table td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    .queue-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .video-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .video-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .video-name {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .video-meta {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .queue-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .queue-card-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .queue-card-body {
+      flex: 1;
+    }
+
+    .queue-card-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .queue-card-time {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .badge-scheduled {
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+    }
+
+    .badge-uploading {
+      background: var(--accent-yellow-soft);
+      color: var(--accent-yellow);
+    }
+
+    .badge-published {
+      background: var(--accent-green-soft);
+      color: var(--accent-green);
+    }
+
+    .badge-failed {
+      background: var(--accent-red-soft);
+      color: var(--accent-red);
+    }
+
+    .badge-uploading .badge-dot {
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--bg-tertiary);
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: inherit;
+    }
+
+    .progress-fill.orange {
+      background: linear-gradient(90deg, var(--accent-orange), var(--accent-orange-2));
+    }
+
+    .progress-fill.green {
+      background: linear-gradient(90deg, #22c55e, var(--accent-green));
+    }
+
+    /* Form */
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .upload-dropzone {
+      border: 2px dashed rgba(238,77,45,0.3);
+      background: rgba(238,77,45,0.04);
+      border-radius: 16px;
+      text-align: center;
+      padding: 24px 16px;
+      transition: 0.22s ease;
+    }
+
+    .upload-dropzone:hover {
+      border-color: rgba(238,77,45,0.5);
+      background: rgba(238,77,45,0.07);
+    }
+
+    .upload-icon {
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 12px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      background: var(--accent-orange-soft);
+      color: var(--accent-orange);
+    }
+
+    .upload-text {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .upload-subtext {
+      margin-top: 4px;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      min-height: 46px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      outline: none;
+      transition: 0.2s ease;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: rgba(238,77,45,0.55);
+      box-shadow: 0 0 0 3px rgba(238,77,45,0.12);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--accent-orange-soft);
+      color: var(--accent-orange);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag .remove {
+      opacity: 0.65;
+    }
+
+    /* Activity */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .activity-item:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .activity-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .activity-dot.success { background: var(--accent-green); }
+    .activity-dot.info { background: var(--accent-blue); }
+    .activity-dot.warning { background: var(--accent-yellow); }
+    .activity-dot.error { background: var(--accent-red); }
+
+    .activity-item strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .activity-item p {
+      margin-top: 2px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .activity-time {
+      margin-top: 4px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    /* Simple metrics cards on other pages */
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .mini-card {
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(24,34,53,0.95);
+      border: 1px solid var(--border);
+    }
+
+    .mini-card h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .mini-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .chart-placeholder {
+      height: 220px;
+      border-radius: 16px;
+      border: 1px dashed rgba(59,130,246,0.28);
+      background:
+        linear-gradient(180deg, rgba(59,130,246,0.08), transparent),
+        var(--bg-secondary);
+      padding: 16px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .chart-bar {
+      flex: 1;
+      border-radius: 10px 10px 0 0;
+      background: linear-gradient(180deg, rgba(59,130,246,0.9), rgba(139,92,246,0.9));
+      min-height: 24px;
+    }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      right: 16px;
+      bottom: calc(var(--bottom-nav-h) + 18px + env(safe-area-inset-bottom, 0px));
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-2));
+      box-shadow: 0 14px 30px rgba(238,77,45,0.35);
+      z-index: 65;
+    }
+
+    .fab svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 70;
+      height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+      background: rgba(17, 24, 39, 0.95);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .bottom-nav-inner {
+      height: var(--bottom-nav-h);
+      max-width: 620px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 4px;
+      transition: 0.2s ease;
+    }
+
+    .bottom-nav-item svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    .bottom-nav-item.active {
+      color: var(--accent-orange);
+    }
+
+    .bottom-nav-item:active {
+      transform: scale(0.94);
+    }
+
+    /* Desktop rules */
+    @media (min-width: 900px) {
+      .sidebar {
+        display: flex;
+      }
+
+      .mobile-header,
+      .bottom-nav,
+      .fab {
+        display: none;
+      }
+
+      .main {
+        padding: 28px 28px 28px;
+      }
+
+      .page-header {
+        margin-bottom: 24px;
+      }
+
+      .header-actions {
+        width: auto;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .stat-card {
+        min-height: 150px;
+        padding: 18px;
+      }
+
+      .stat-value {
+        font-size: 28px;
+      }
+
+      .content-grid {
+        grid-template-columns: minmax(0, 1.5fr) minmax(320px, 420px);
+        gap: 18px;
+      }
+
+      .queue-table-wrap {
+        display: block;
+      }
+
+      .queue-cards {
+        display: none;
+      }
+
+      .panel-padding {
+        padding: 20px;
+      }
+
+      .form-grid.two {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .mini-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 640px) and (max-width: 899px) {
+      .main {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .mini-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .form-grid.two {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .main {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .queue-card-item {
+        padding: 12px;
+      }
+
+      .video-thumb {
+        width: 42px;
+        height: 42px;
+        font-size: 16px;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">SV</div>
+        <div class="logo-text"><span>Shopee</span>Video Auto</div>
+      </div>
+
+      <div class="nav-section">Principal</div>
+
+      <button class="nav-item active" data-page-target="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+        Dashboard
+      </button>
+
+      <button class="nav-item" data-page-target="upload">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Upload
+      </button>
+
+      <button class="nav-item" data-page-target="agendamentos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        Agendamentos
+      </button>
+
+      <button class="nav-item" data-page-target="analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        Analytics
+      </button>
+
+      <div class="nav-section">Sistema</div>
+
+      <button class="nav-item" data-page-target="config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        Configurações
+      </button>
+
+      <button class="nav-item" data-page-target="integracoes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        API & Integrações
+      </button>
+
+      <div class="sidebar-footer">
+        <div class="avatar">JS</div>
+        <div class="user-info">
+          <strong>John Santos</strong>
+          <span>Conta Shopee conectada</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-shell">
+      <!-- Mobile header -->
+      <header class="mobile-header">
+        <div class="logo">
+          <div class="logo-icon">SV</div>
+          <div class="logo-text"><span>Shopee</span>Video</div>
+        </div>
+
+        <div class="mobile-header-actions">
+          <button class="icon-btn" aria-label="Sincronizar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M1 20s2-6 6-9 6-3 9-3h5"></path>
+            </svg>
+          </button>
+
+          <button class="icon-btn" aria-label="Notificações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="main">
+        <!-- DASHBOARD -->
+        <section class="page active" id="page-dashboard">
+          <div class="page-header">
+            <div class="page-header-top">
+              <div class="page-title-wrap">
+                <h1>Dashboard</h1>
+                <p>Visão geral do fluxo de publicação, uploads, fila e desempenho dos vídeos.</p>
+              </div>
+
+              <div class="header-actions">
+                <button class="btn btn-secondary">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M1 20s2-6 6-9 6-3 9-3h5"></path>
+                  </svg>
+                  Sincronizar
+                </button>
+
+                <button class="btn btn-primary" data-page-target="upload">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Novo Upload
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-top">
+                <div class="stat-label">Publicados</div>
+                <div class="stat-icon">📹</div>
+              </div>
+              <div class="stat-value">247</div>
+              <div class="stat-subtitle">Vídeos publicados</div>
+              <div class="stat-change up">↑ 18% esta semana</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-top">
+                <div class="stat-label">Fila</div>
+                <div class="stat-icon">⏱</div>
+              </div>
+              <div class="stat-value">12</div>
+              <div class="stat-subtitle">Itens aguardando envio</div>
+              <div class="stat-change up">3 agendados hoje</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-top">
+                <div class="stat-label">Sucesso</div>
+                <div class="stat-icon">✅</div>
+              </div>
+              <div class="stat-value">98.2%</div>
+              <div class="stat-subtitle">Taxa de sucesso</div>
+              <div class="stat-change up">↑ 2.1% vs mês</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-top">
+                <div class="stat-label">Views</div>
+                <div class="stat-icon">👁</div>
+              </div>
+              <div class="stat-value">54.3K</div>
+              <div class="stat-subtitle">Visualizações totais</div>
+              <div class="stat-change up">↑ 32% semana</div>
+            </div>
+          </div>
+
+          <div class="content-grid">
+            <div class="panel panel-padding queue-panel">
+              <div class="section-title">
+                Fila de Publicação
+                <span>Atualizado há 2 min</span>
+              </div>
+
+              <div class="queue-table-wrap">
+                <table class="queue-table">
+                  <thead>
+                    <tr>
+                      <th>Vídeo</th>
+                      <th>Status</th>
+                      <th>Agendado</th>
+                      <th>Progresso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="video-cell">
+                          <div class="video-thumb" style="background:linear-gradient(135deg,#ff6b3d,#ee4d2d)">🎬</div>
+                          <div>
+                            <div class="video-name">Unboxing Produto X - Review</div>
+                            <div class="video-meta">4:32 · 128MB</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span class="badge badge-uploading"><span class="badge-dot"></span>Enviando</span></td>
+                      <td style="font-size:12px;color:var(--text-secondary)">Hoje, 14:30</td>
+                      <td>
+                        <div style="font-size:12px;color:var(--text-secondary)">67%</div>
+                        <div class="progress-bar"><div class="progress-fill orange" style="width:67%"></div></div>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <div class="video-cell">
+                          <div class="video-thumb" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">🛍</div>
+                          <div>
+                            <div class="video-name">Top 5 Ofertas da Semana</div>
+                            <div class="video-meta">2:15 · 64MB</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span class="badge badge-scheduled"><span class="badge-dot"></span>Agendado</span></td>
+                      <td style="font-size:12px;color:var(--text-secondary)">Hoje, 18:00</td>
+                      <td><div style="font-size:12px;color:var(--text-secondary)">—</div></td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <div class="video-cell">
+                          <div class="video-thumb" style="background:linear-gradient(135deg,#10b981,#059669)">⭐</div>
+                          <div>
+                            <div class="video-name">Comparativo Smartphones 2026</div>
+                            <div class="video-meta">6:48 · 210MB</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span class="badge badge-scheduled"><span class="badge-dot"></span>Agendado</span></td>
+                      <td style="font-size:12px;color:var(--text-secondary)">Amanhã, 10:00</td>
+                      <td><div style="font-size:12px;color:var(--text-secondary)">—</div></td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <div class="video-cell">
+                          <div class="video-thumb" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">💄</div>
+                          <div>
+                            <div class="video-name">Haul de Beleza - Março</div>
+                            <div class="video-meta">3:21 · 95MB</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span class="badge badge-published"><span class="badge-dot"></span>Publicado</span></td>
+                      <td style="font-size:12px;color:var(--text-secondary)">Ontem, 20:00</td>
+                      <td>
+                        <div style="font-size:12px;color:var(--text-secondary)">100%</div>
+                        <div class="progress-bar"><div class="progress-fill green" style="width:100%"></div></div>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <div class="video-cell">
+                          <div class="video-thumb" style="background:linear-gradient(135deg,#f59e0b,#d97706)">📦</div>
+                          <div>
+                            <div class="video-name">Gadgets que Valem a Pena</div>
+                            <div class="video-meta">5:10 · 165MB</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span class="badge badge-failed"><span class="badge-dot"></span>Falhou</span></td>
+                      <td style="font-size:12px;color:var(--text-secondary)">Ontem, 16:00</td>
+                      <td><div style="font-size:12px;color:var(--accent-red)">Timeout na API</div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="queue-cards">
+                <div class="queue-card-item">
+                  <div class="video-thumb" style="background:linear-gradient(135deg,#ff6b3d,#ee4d2d)">🎬</div>
+                  <div class="queue-card-body">
+                    <div class="video-name">Unboxing Produto X - Review</div>
+                    <div class="video-meta">4:32 · 128MB</div>
+                    <div class="queue-card-bottom">
+                      <span class="badge badge-uploading"><span class="badge-dot"></span>67%</span>
+                      <span class="queue-card-time">Hoje, 14:30</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill orange" style="width:67%"></div></div>
+                  </div>
+                </div>
+
+                <div class="queue-card-item">
+                  <div class="video-thumb" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">🛍</div>
+                  <div class="queue-card-body">
+                    <div class="video-name">Top 5 Ofertas da Semana</div>
+                    <div class="video-meta">2:15 · 64MB</div>
+                    <div class="queue-card-bottom">
+                      <span class="badge badge-scheduled"><span class="badge-dot"></span>Agendado</span>
+                      <span class="queue-card-time">Hoje, 18:00</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="queue-card-item">
+                  <div class="video-thumb" style="background:linear-gradient(135deg,#10b981,#059669)">⭐</div>
+                  <div class="queue-card-body">
+                    <div class="video-name">Comparativo Smartphones 2026</div>
+                    <div class="video-meta">6:48 · 210MB</div>
+                    <div class="queue-card-bottom">
+                      <span class="badge badge-scheduled"><span class="badge-dot"></span>Agendado</span>
+                      <span class="queue-card-time">Amanhã, 10:00</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="queue-card-item">
+                  <div class="video-thumb" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">💄</div>
+                  <div class="queue-card-body">
+                    <div class="video-name">Haul de Beleza - Março</div>
+                    <div class="video-meta">3:21 · 95MB</div>
+                    <div class="queue-card-bottom">
+                      <span class="badge badge-published"><span class="badge-dot"></span>Publicado</span>
+                      <span class="queue-card-time">Ontem, 20:00</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill green" style="width:100%"></div></div>
+                  </div>
+                </div>
+
+                <div class="queue-card-item">
+                  <div class="video-thumb" style="background:linear-gradient(135deg,#f59e0b,#d97706)">📦</div>
+                  <div class="queue-card-body">
+                    <div class="video-name">Gadgets que Valem a Pena</div>
+                    <div class="video-meta">5:10 · 165MB</div>
+                    <div class="queue-card-bottom">
+                      <span class="badge badge-failed"><span class="badge-dot"></span>Falhou</span>
+                      <span class="queue-card-time" style="color:var(--accent-red)">Timeout</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="panel panel-padding">
+                <div class="section-title">Upload Rápido</div>
+                <div class="upload-dropzone">
+                  <div class="upload-icon">☁️</div>
+                  <div class="upload-text">Arraste vídeos aqui</div>
+                  <div class="upload-subtext">MP4, MOV, AVI · Máx 500MB</div>
+                </div>
+              </div>
+
+              <div class="panel panel-padding">
+                <div class="section-title">Agendar Publicação</div>
+
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label">Título</label>
+                    <input type="text" class="form-input" placeholder="Ex: Unboxing Produto Incrível" />
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                    <textarea class="form-textarea" placeholder="Descreva o conteúdo do vídeo..."></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Data & Hora</label>
+                    <input type="datetime-local" class="form-input" />
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Tags</label>
+                    <div class="tag-row">
+                      <span class="tag">#shopee <span class="remove">✕</span></span>
+                      <span class="tag">#review <span class="remove">✕</span></span>
+                      <span class="tag">#unboxing <span class="remove">✕</span></span>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary btn-full" style="margin-top:10px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                  </svg>
+                  Agendar
+                </button>
+              </div>
+
+              <div class="panel panel-padding">
+                <div class="section-title">Atividade Recente</div>
+
+                <div class="activity-list">
+                  <div class="activity-item">
+                    <div class="activity-dot success"></div>
+                    <div>
+                      <strong>"Haul de Beleza" publicado com sucesso</strong>
+                      <p>O vídeo foi processado e enviado sem erro para a Shopee.</p>
+                      <div class="activity-time">Ontem às 20:01</div>
+                    </div>
+                  </div>
+
+                  <div class="activity-item">
+                    <div class="activity-dot error"></div>
+                    <div>
+                      <strong>"Gadgets que Valem" falhou</strong>
+                      <p>O envio retornou timeout ao tentar concluir a publicação.</p>
+                      <div class="activity-time">Ontem às 16:03</div>
+                    </div>
+                  </div>
+
+                  <div class="activity-item">
+                    <div class="activity-dot info"></div>
+                    <div>
+                      <strong>3 vídeos agendados para hoje</strong>
+                      <p>A fila de publicação está pronta para as próximas execuções.</p>
+                      <div class="activity-time">Hoje às 08:00</div>
+                    </div>
+                  </div>
+
+                  <div class="activity-item">
+                    <div class="activity-dot warning"></div>
+                    <div>
+                      <strong>Rate limit quase atingido</strong>
+                      <p>A API da Shopee está próxima do limite permitido para este período.</p>
+                      <div class="activity-time">Hoje às 12:45</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- UPLOAD -->
+        <section class="page" id="page-upload">
+          <div class="page-header">
+            <div class="page-header-top">
+              <div class="page-title-wrap">
+                <h1>Upload</h1>
+                <p>Envie novos vídeos, defina metadados e prepare conteúdos para publicação.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <h3>Uploads hoje</h3>
+              <p>7 arquivos enviados nas últimas horas para processamento automático.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Espaço usado</h3>
+              <p>3.4 GB consumidos da cota atual de armazenamento temporário.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Formato preferido</h3>
+              <p>MP4 H.264 com bitrate otimizado para evitar falhas e demora no envio.</p>
+            </div>
+          </div>
+
+          <div class="panel panel-padding">
+            <div class="section-title">Novo Upload</div>
+
+            <div class="stack">
+              <div class="upload-dropzone">
+                <div class="upload-icon">🎥</div>
+                <div class="upload-text">Clique ou arraste seus vídeos</div>
+                <div class="upload-subtext">Aceita MP4, MOV e AVI. Recomendado: MP4 até 500MB.</div>
+              </div>
+
+              <div class="form-grid two">
+                <div class="form-group">
+                  <label class="form-label">Título do vídeo</label>
+                  <input class="form-input" type="text" placeholder="Nome do vídeo" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Categoria</label>
+                  <select class="form-select">
+                    <option>Selecione</option>
+                    <option>Review</option>
+                    <option>Unboxing</option>
+                    <option>Ofertas</option>
+                    <option>Comparativos</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Produto / SKU</label>
+                  <input class="form-input" type="text" placeholder="Ex: SKU-12345" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Thumbnail</label>
+                  <input class="form-input" type="text" placeholder="URL da imagem ou nome do arquivo" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Descrição</label>
+                <textarea class="form-textarea" placeholder="Escreva a descrição do conteúdo..."></textarea>
+              </div>
+
+              <button class="btn btn-primary">Enviar para fila</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- AGENDAMENTOS -->
+        <section class="page" id="page-agendamentos">
+          <div class="page-header">
+            <div class="page-header-top">
+              <div class="page-title-wrap">
+                <h1>Agendamentos</h1>
+                <p>Organize horários, publique em sequência e acompanhe o calendário de vídeos.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <h3>Hoje</h3>
+              <p>3 publicações previstas entre 14:30 e 20:00.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Amanhã</h3>
+              <p>5 vídeos preparados para a janela da manhã.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Conflitos</h3>
+              <p>Nenhum conflito de horário detectado na agenda atual.</p>
+            </div>
+          </div>
+
+          <div class="panel panel-padding">
+            <div class="section-title">Criar agendamento</div>
+
+            <div class="form-grid two">
+              <div class="form-group">
+                <label class="form-label">Vídeo</label>
+                <select class="form-select">
+                  <option>Selecione um vídeo</option>
+                  <option>Unboxing Produto X</option>
+                  <option>Top 5 Ofertas da Semana</option>
+                  <option>Comparativo Smartphones 2026</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Data e hora</label>
+                <input type="datetime-local" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Prioridade</label>
+                <select class="form-select">
+                  <option>Normal</option>
+                  <option>Alta</option>
+                  <option>Urgente</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Canal / Conta</label>
+                <select class="form-select">
+                  <option>Conta principal</option>
+                  <option>Conta secundária</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top:10px;">Salvar agendamento</button>
+          </div>
+        </section>
+
+        <!-- ANALYTICS -->
+        <section class="page" id="page-analytics">
+          <div class="page-header">
+            <div class="page-header-top">
+              <div class="page-title-wrap">
+                <h1>Analytics</h1>
+                <p>Visualize alcance, desempenho dos vídeos e métricas de crescimento.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <h3>CTR médio</h3>
+              <p>6.4% nas últimas campanhas publicadas automaticamente.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Retenção</h3>
+              <p>Retenção média de 58% nos vídeos curtos desta semana.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Melhor horário</h3>
+              <p>Maior volume de visualizações entre 18h e 21h.</p>
+            </div>
+          </div>
+
+          <div class="panel panel-padding">
+            <div class="section-title">Desempenho semanal</div>
+            <div class="chart-placeholder" aria-label="Gráfico ilustrativo">
+              <div class="chart-bar" style="height:32%"></div>
+              <div class="chart-bar" style="height:48%"></div>
+              <div class="chart-bar" style="height:56%"></div>
+              <div class="chart-bar" style="height:40%"></div>
+              <div class="chart-bar" style="height:72%"></div>
+              <div class="chart-bar" style="height:85%"></div>
+              <div class="chart-bar" style="height:62%"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CONFIG -->
+        <section class="page" id="page-config">
+          <div class="page-header">
+            <div class="page-header-top">
+              <div class="page-title-wrap">
+                <h1>Configurações</h1>
+                <p>Ajuste o comportamento da automação, notificações e preferências do sistema.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel panel-padding">
+            <div class="section-title">Preferências gerais</div>
+
+            <div class="form-grid two">
+              <div class="form-group">
+                <label class="form-label">Fuso horário</label>
+                <select class="form-select">
+                  <option>America/Sao_Paulo</option>
+                  <option>UTC</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Conta padrão</label>
+                <select class="form-select">
+                  <option>Conta Shopee principal</option>
+                  <option>Conta de backup</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Notificações por e-mail</label>
+                <select class="form-select">
+                  <option>Ativadas</option>
+                  <option>Desativadas</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Repetir em caso de falha</label>
+                <select class="form-select">
+                  <option>Sim</option>
+                  <option>Não</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- INTEGRAÇÕES -->
+        <section class="page" id="page-integracoes">
+          <div class="page-header">
+            <div class="page-header-top">
+              <div class="page-title-wrap">
+                <h1>API & Integrações</h1>
+                <p>Gerencie tokens, webhooks, conexões externas e monitoramento das chamadas.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <h3>Status da API</h3>
+              <p>Conectada e respondendo normalmente nas últimas verificações.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Webhook</h3>
+              <p>1 endpoint ativo para receber retorno de publicação e falhas.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Limite atual</h3>
+              <p>Uso elevado nas últimas 24 horas. Convém monitorar o rate limit.</p>
+            </div>
+          </div>
+
+          <div class="panel panel-padding">
+            <div class="section-title">Credenciais</div>
+
+            <div class="form-grid two">
+              <div class="form-group">
+                <label class="form-label">API Key</label>
+                <input class="form-input" type="text" placeholder="••••••••••••••••••••" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Webhook URL</label>
+                <input class="form-input" type="text" placeholder="https://seu-dominio.com/webhook" />
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top:10px;">Salvar integrações</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" data-page-target="upload" aria-label="Novo upload">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="bottom-nav-item active" data-page-target="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+        <span>Início</span>
+      </button>
+
+      <button class="bottom-nav-item" data-page-target="upload">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span>Upload</span>
+      </button>
+
+      <button class="bottom-nav-item" data-page-target="agendamentos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>Agenda</span>
+      </button>
+
+      <button class="bottom-nav-item" data-page-target="analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <span>Analytics</span>
+      </button>
+
+      <button class="bottom-nav-item" data-page-target="config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span>Config</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    const pageButtons = document.querySelectorAll("[data-page-target]");
+    const pages = document.querySelectorAll(".page");
+    const navItems = document.querySelectorAll(".nav-item, .bottom-nav-item");
+
+    function setActivePage(pageName) {
+      pages.forEach((page) => {
+        page.classList.toggle("active", page.id === `page-${pageName}`);
+      });
+
+      navItems.forEach((item) => {
+        item.classList.toggle("active", item.dataset.pageTarget === pageName);
+      });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    pageButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = button.dataset.pageTarget;
+        if (target) setActivePage(target);
+      });
+    });
+  </script>
+</body>
+</html>
