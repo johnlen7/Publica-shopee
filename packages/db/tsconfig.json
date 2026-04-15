@@ -4,13 +4,8 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "dist",
-    "noEmit": true,
+    "rootDir": "src",
     "types": ["node"]
   },
-  "include": [
-    "src/**/*",
-    "../../packages/shared/src/**/*",
-    "../../packages/shopee/src/**/*",
-    "../../packages/db/src/**/*"
-  ]
+  "include": ["src/**/*"]
 }

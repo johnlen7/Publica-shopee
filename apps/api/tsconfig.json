@@ -8,5 +8,10 @@
     "types": ["node"],
     "verbatimModuleSyntax": false
   },
-  "include": ["src/**/*", "../../packages/shared/src/**/*"]
+  "include": [
+    "src/**/*",
+    "../../packages/shared/src/**/*",
+    "../../packages/shopee/src/**/*",
+    "../../packages/db/src/**/*"
+  ]
 }

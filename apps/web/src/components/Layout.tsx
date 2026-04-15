@@ -5,6 +5,7 @@ const nav = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/upload', label: 'Upload' },
   { to: '/agendamentos', label: 'Agendamentos' },
+  { to: '/templates', label: 'Templates' },
   { to: '/analytics', label: 'Analytics' },
   { to: '/integracoes', label: 'Integrações' },
   { to: '/config', label: 'Configurações' },

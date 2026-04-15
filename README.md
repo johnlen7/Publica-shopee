@@ -1,8 +1,10 @@
-# Publica Shopee — Shopee Video Automator
+# Publica Shopee — Gestor de Vídeos de Listing
 
-Plataforma web para automação do fluxo de envio, organização, agendamento e monitoramento de vídeos destinados ao ecossistema **Shopee Video**, com foco em produtividade, rastreabilidade e redução de falhas manuais.
+Plataforma web para sellers Shopee gerenciarem em escala os **vídeos de listagem de produtos** via Shopee Open Platform (media_space + product API).
 
-> **Status atual:** repositório em fase de concepção. Contém PRD detalhado (`Prd.md`) e protótipo de UI estático (`Index.html`). Implementação backend e integrações ainda não iniciadas.
+> **Escopo revisado após auditoria técnica.** O PRD original propunha automação de posts no feed **Shopee Video** (estilo TikTok). A pesquisa em fontes oficiais e ToS (ver [`AUDIT.md`](./AUDIT.md)) concluiu que **não existe API pública para publicar no feed Shopee Video** e que o ToS da Shopee Live proíbe automação via scripts. O produto foi reposicionado para o caminho 100% oficial e dentro do ToS: **gestão de vídeos de listing de produto**.
+
+> **Status atual:** Fase 0 concluída (scaffold monorepo). Fase 1 em implementação.
 
 ---
 
@@ -23,13 +25,20 @@ Plataforma web para automação do fluxo de envio, organização, agendamento e 
 
 ## Visão geral
 
-Sellers e times de conteúdo que operam em volume na Shopee enfrentam um processo manual de publicação de vídeos: envios repetitivos, metadados inconsistentes, ausência de fila/retry, e pouca rastreabilidade de falhas. Este projeto busca entregar uma camada operacional sobre a **Shopee Open Platform** para:
+Sellers que operam em volume enfrentam um processo manual para cadastrar vídeos em cada um de seus produtos na Shopee: envios repetitivos, metadados inconsistentes, ausência de fila/retry, pouca rastreabilidade. Este projeto entrega uma camada operacional sobre a **Shopee Open Platform** (endpoints confirmados na auditoria) para:
 
-- conectar múltiplas contas Shopee via fluxo oficial (`access_token` / `refresh_token`);
-- validar, enviar e acompanhar uploads em lote;
-- agendar publicações com fila de jobs e timezone por workspace;
-- centralizar metadados (título, descrição, hashtags, categoria) com templates reutilizáveis;
-- fornecer dashboard operacional com status, logs, alertas e trilha de auditoria.
+- conectar múltiplas contas Shopee via **OAuth oficial** (`/api/v2/auth/token/get`, refresh com `/api/v2/auth/access_token/get`);
+- validar, enviar e acompanhar uploads via **`media_space`** oficial (`init_video_upload` → `upload_video_part` → `complete_video_upload` → `get_video_upload_result`);
+- **vincular** o vídeo carregado a produtos via `/api/v2/product/update_item`;
+- agendar a aplicação do vídeo ao produto em data/hora, com fila BullMQ;
+- centralizar metadados de listing (título, descrição) com templates reutilizáveis;
+- dashboard operacional com status, logs, alertas e trilha de auditoria.
+
+### O que este produto **não** faz (e por quê)
+
+- **Não publica no feed Shopee Video** (estilo TikTok). Não existe API pública para isso — o feed é gerenciado exclusivamente pelo Seller Centre/App Shopee ou Creator Center. Automatizar essa publicação por scripts é explicitamente vetado pelo ToS da Shopee Live.
+- **Não usa cookies, sessão ou browser automation.** Todo acesso é via Open Platform com assinatura HMAC-SHA256.
+- **Não cobre Shopee Live** nem upload de stream ao vivo.
 
 ## Princípios do produto
 
@@ -160,20 +169,21 @@ python3 -m http.server 8080
 
 ## Documentação
 
-- [`Prd.md`](./Prd.md) — PRD completo (objetivos, escopo funcional, modelo de dados, fluxos, riscos)
-- [`PLAN.md`](./PLAN.md) — Plano de implementação por fases, entregáveis e critérios de aceite
+- [`Prd.md`](./Prd.md) — PRD original (preservado como referência histórica)
+- [`AUDIT.md`](./AUDIT.md) — **Auditoria técnica** (abril/2026) com achados da Shopee Open Platform e correções de escopo **— leia primeiro**
+- [`PLAN.md`](./PLAN.md) — Plano de implementação por fases, entregáveis e critérios de aceite (pós-auditoria)
 
 ## Roadmap
 
 Resumo de alto nível — detalhes em `PLAN.md`.
 
-- [x] PRD aprovado
+- [x] PRD inicial
 - [x] Protótipo de UI estático
-- [ ] Fase 0 — Setup de monorepo, CI, base de dados, infra mínima
-- [ ] Fase 1 — Autenticação Shopee + upload oficial + dashboard + agendamento interno
-- [ ] Descoberta técnica — validar endpoint de publicação Shopee Video
-- [ ] Fase 2 — Publicação automática (condicionada)
-- [ ] Hardening — observabilidade, RBAC, auditoria completa, alertas
+- [x] **Descoberta técnica concluída** (ver `AUDIT.md`) — escopo pivotado para vídeos de listing
+- [x] Fase 0 — Monorepo, CI, Docker Compose, Prisma, auth local
+- [ ] Fase 1 — OAuth Shopee + `media_space` upload + `product.update_item` + agendamento
+- [ ] Fase 2 — Métricas por produto, edição em massa de vídeos, templates avançados
+- [ ] Fase 3 — Hardening, RBAC, auditoria completa, alertas, LGPD
 
 ---
 

@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@publica/db": "workspace:*",
     "@publica/shared": "workspace:*",
+    "@publica/shopee": "workspace:*",
     "bullmq": "^5.25.4",
     "ioredis": "^5.4.1",
     "pino": "^9.5.0",

@@ -1,8 +1,8 @@
 # Plano de Implementação — Publica Shopee
 
-Plano de execução derivado de [`Prd.md`](./Prd.md) e do protótipo de UI em [`Index.html`](./Index.html). Organiza o trabalho em fases com entregáveis, critérios de aceite e dependências explícitas.
+Plano de execução **pós-auditoria técnica** (ver [`AUDIT.md`](./AUDIT.md)). Deriva do [`Prd.md`](./Prd.md) com escopo reposicionado para **gestão de vídeos de listing de produto Shopee** (o feed "Shopee Video" não tem API pública e foi removido do escopo).
 
-> **Princípio guia:** cada fase deve entregar valor operacional mesmo que a próxima não seja iniciada. A Fase 2 (publicação) é **condicionada** à confirmação de endpoint oficial.
+> **Princípio guia:** cada fase deve entregar valor operacional mesmo que a próxima não seja iniciada. Todas as integrações usam endpoints **oficialmente documentados** da Shopee Open Platform — zero dependência de browser automation, scraping ou APIs não publicadas.
 
 ---
 
@@ -23,11 +23,11 @@ Plano de execução derivado de [`Prd.md`](./Prd.md) e do protótipo de UI em [`
 ## Linha de fases
 
 ```
-Fase 0 ──► Fase 1 ──► Descoberta ──► Fase 2 (condicional) ──► Fase 3
-Fundação   MVP oficial   Gate técnico    Publicação             Hardening
+Fase 0 ──► Fase 1 ──► Fase 2 ──► Fase 3
+Fundação   MVP core    Valor+       Hardening
 ```
 
-Cada fase tem exit criteria explícitos. Fase 2 só inicia se o gate de descoberta retornar verde.
+Gate de descoberta técnica **já executado** (abril/2026) — ver `AUDIT.md`. Escopo congelado no caminho oficial `media_space` + `product.update_item`.
 
 ---
 
@@ -64,42 +64,46 @@ Corresponde ao **MVP fase 1** do PRD (§12). Tudo que depende apenas de endpoint
 
 ### 1.1 Autenticação e integração Shopee
 
-**PRD §6.1**
+**PRD §6.1 + AUDIT.md §1**
 
-- Fluxo de autorização oficial Shopee Open Platform.
-- Troca de `code` por `access_token` + `refresh_token` com persistência criptografada.
-- Renovação automática antes da expiração (worker scheduled).
-- Suporte a múltiplas contas Shopee por workspace.
-- Detecção de token inválido → marcar conta como "precisa reconectar".
+Fluxo OAuth 2.0 oficial confirmado:
 
-**Critérios de aceite**
-
-- Usuário conecta conta Shopee e retorno é persistido.
-- Tokens são criptografados em repouso (ex.: AES-GCM com chave em vault/env).
-- Renovação ocorre sem intervenção e fica registrada em `audit_logs`.
-- Página `integracoes` lista contas com status (ativa / expirada / revogada).
-
-### 1.2 Upload de vídeo oficial
-
-**PRD §6.2, §5.2, §5.3**
-
-Pipeline:
-
-1. Validação local: extensão, duração (10–60 s), tamanho (≤ 30 MB), integridade.
-2. Cálculo de MD5 do arquivo.
-3. Upload do binário para storage temporário (S3/MinIO) em chunks do cliente para a API.
-4. Worker dispara `init_video_upload` → recebe `video_upload_id`.
-5. Worker envia partes via `upload_video_part` (4 MB cada, exceto última).
-6. Worker finaliza com `complete_video_upload`.
-7. Polling de `get_video_upload_result` até estado terminal.
-8. Suporte a cancelamento (`cancel_video_upload`) e retry parcial.
+1. UI dispara `POST /integrations/shopee/authorize` → backend gera URL `/api/v2/shop/auth_partner?partner_id=...&timestamp=...&sign=...&redirect=...&state=...`
+2. Seller autoriza no portal Shopee → redirect `?code=...&shop_id=...` (ou `main_account_id` para CBSC)
+3. Backend troca em `/api/v2/auth/token/get` → persiste `access_token` (TTL **4 h**) e `refresh_token` (TTL **30 d**) criptografados (AES-256-GCM)
+4. Worker `token-refresh` roda scheduled (a cada 30 min) e renova tokens < 1 h de expirar via `/api/v2/auth/access_token/get`. **Refresh rotativo**: o antigo é invalidado, a transação de update no DB é atômica.
+5. Assinatura HMAC-SHA256 hex lowercase com base strings corretas (public/shop/merchant).
 
 **Critérios de aceite**
 
-- Upload em lote (ex.: 20 vídeos) completa sem intervenção manual.
-- Falha em uma parte específica aciona retry da parte, não do arquivo inteiro.
+- Usuário conecta conta Shopee com sucesso (sandbox `partner.test-stable.shopeemobile.com`).
+- Tokens persistidos criptografados; nenhum endpoint devolve tokens em claro.
+- Renovação automática registrada em `audit_logs`.
+- Conta CBSC (merchant_id) marcada visualmente com aviso de requisito de aprovação Shopee.
+- Página Integrações lista contas com status (ACTIVE / EXPIRED / REVOKED / NEEDS_RECONNECT) e data de expiração.
+
+### 1.2 Upload de vídeo via `media_space` (oficial)
+
+**PRD §6.2, §5.2, §5.3 + AUDIT.md §2**
+
+Pipeline confirmado:
+
+1. Validação local client-side: tipo (MP4/MOV/AVI), duração (10–60 s), tamanho (≤ 30 MB).
+2. Upload do binário para S3/MinIO (staging) — chunks diretos do cliente.
+3. API enfileira job `init-upload` com `file_md5` (hex) e `file_size`.
+4. Worker chama `POST /api/v2/media_space/init_video_upload` → recebe `video_upload_id`.
+5. Worker baixa do S3 em partes de **exatamente 4 MB** (última pode ser menor), calcula `content_md5` hex por parte, envia via **multipart/form-data** em `POST /api/v2/media_space/upload_video_part` com `part_seq` 0-based.
+6. Worker chama `POST /api/v2/media_space/complete_video_upload` com `part_seq_list` + `report_data`.
+7. Worker inicia polling em `POST /api/v2/media_space/get_video_upload_result` com backoff 5s → 10s → 20s (cap 2 min). **Sem webhook oficial** — polling é obrigatório.
+8. `POST /api/v2/media_space/cancel_video_upload` em caso de abort ou retry completo.
+
+**Critérios de aceite**
+
+- Upload em lote completa sem intervenção manual.
+- Falha em uma parte → retry apenas daquela parte (`error.video_upload.part_md5_mismatch`).
 - Estados `INITIATED` / `TRANSCODING` / `SUCCEEDED` / `FAILED` / `CANCELLED` refletidos na UI.
-- Arquivos que violam regras locais são rejeitados **antes** do upload com mensagem explícita.
+- Arquivos que violam regras locais rejeitados **antes** do upload.
+- Arquivo removido do S3 após `SUCCEEDED` + confirmação de vinculação (retenção configurável).
 
 ### 1.3 Metadados e templates
 
@@ -110,19 +114,28 @@ Pipeline:
 - Aplicação em massa e preview antes do envio.
 - Validação de limite de caracteres parametrizável; warning em duplicidade de título.
 
-### 1.4 Agendamento
+### 1.4 Vinculação ao produto (`product.update_item`)
 
-**PRD §6.4**
+**Novo — deriva de AUDIT.md §3**
 
-- Agendar data/hora por vídeo com timezone do workspace.
-- Importação CSV/XLSX com validação por linha (falhas individuais não derrubam o lote).
-- Estados do job: `scheduled` / `running` / `completed` / `failed` / `cancelled`.
-- Guard: job só roda se conta autenticada **e** upload do vídeo concluído.
-- Reagendamento individual e em lote.
+Após transcodificação `SUCCEEDED`, o vídeo precisa ser **aplicado** a um produto (`item_id` Shopee) para ficar visível no catálogo. Fluxo:
 
-> **Observação:** enquanto a Fase 2 não estiver validada, o "run" do agendamento executa apenas as etapas oficialmente suportadas (ex.: confirmação de asset disponível). A publicação fica no status `pending_publish_api`.
+1. Listar produtos do seller via `POST /api/v2/product/get_item_list` com paginação.
+2. Usuário seleciona o produto (ou informa `item_id` na importação CSV).
+3. Backend chama `POST /api/v2/product/update_item` passando `item_id` + `video_upload_id` (campo `video_info`).
+4. Resposta confirma a atualização. Estado do `publish_job` vira `COMPLETED`.
 
-### 1.5 Dashboard e observabilidade
+### 1.5 Agendamento de aplicação
+
+**PRD §6.4 reposicionado**
+
+- Agendar data/hora para a **aplicação do vídeo ao produto** (update de listing).
+- Timezone por workspace; importação CSV/XLSX com validação linha a linha (falhas individuais não derrubam o lote — PRD §6.4).
+- Estados: `SCHEDULED` / `RUNNING` / `COMPLETED` / `FAILED` / `CANCELLED`.
+- Guards: conta ACTIVE **e** upload `SUCCEEDED`.
+- BullMQ delayed job com `jobId = publish_job.id` (cancelamento direto pelo ID).
+
+### 1.6 Dashboard e observabilidade
 
 **PRD §6.6, §6.7**
 
@@ -142,44 +155,35 @@ Pipeline:
 
 ---
 
-## Descoberta técnica (gate)
+## Descoberta técnica — CONCLUÍDA
 
-**Antes** de iniciar a Fase 2, produzir um **Relatório de Descoberta** respondendo:
+Executada em abril/2026. Veredito em [`AUDIT.md`](./AUDIT.md):
 
-1. Existe endpoint público oficial na Shopee Open Platform para publicar um asset de vídeo como post em Shopee Video?
-2. Quais campos são obrigatórios? (título, descrição, categoria, thumbnail, produtos vinculados?)
-3. Existem endpoints oficiais para editar, despublicar e ler métricas?
-4. Há rate limits ou restrições de domínio/região?
-5. Caso não exista API oficial: quais alternativas (ex.: parceria, canal empresarial, app marketplace) e qual o risco jurídico de alternativas não oficiais?
-
-**Gate verde:** endpoints existem e estão documentados → inicia Fase 2.
-
-**Gate amarelo:** endpoints existem mas com restrições relevantes (ex.: whitelist, só via parceria) → avaliar viabilidade caso a caso.
-
-**Gate vermelho:** não há endpoint oficial → Fase 2 fica em backlog, produto é entregue como "gestão de assets + agendamento interno", comunicação transparente ao cliente.
-
-Entregável: `docs/discovery-shopee-video-publish.md` (criado no momento do gate).
+- ❌ **Sem API pública para publicar no feed Shopee Video.**
+- ✅ **`media_space` confirmado** para upload de vídeo.
+- ✅ **`product.update_item` confirmado** como caminho oficial de "publicação" (vincular vídeo ao produto).
+- ⚠️ ToS Shopee Live proíbe automação por scripts → automação do feed social fica permanentemente fora do escopo.
 
 ---
 
-## Fase 2 — Publicação automática (condicionada)
+## Fase 2 — Valor adicional (pós-MVP)
 
-Só inicia se o gate for verde ou amarelo com plano aprovado.
+Após Fase 1 estável, focar em recursos que **aprofundam valor** dentro do caminho oficial:
 
 ### Escopo
 
-- Publicação automática do asset via endpoint oficial confirmado.
-- Edição de publicação (título, descrição, hashtags).
-- Remoção/despublicação.
-- Leitura de métricas específicas de Shopee Video.
-- Integração do worker de agendamento com a chamada de publicação.
+- **Edição em massa de vídeos de produto**: trocar o vídeo de N produtos com um template selecionado.
+- **Desvinculação** (limpar `video_info` do produto).
+- **Métricas operacionais de item**: cruzar `product.get_item_base_info` com status interno.
+- **Templates avançados por campanha**: snapshots aplicáveis em bulk.
+- **Import A/B de CSV/XLSX**: preview de impacto antes de confirmar.
+- **Webhook outbound para sistemas do seller** (notificar quando upload/vinculação completa).
 
 ### Critérios de aceite
 
-- Job agendado executa publicação real com sucesso e devolve URL pública do post.
-- Falha de publicação aciona retry com backoff e abre incidente se persistir.
-- Edição e remoção refletidas no dashboard em < 30 s.
-- Métricas (views, engajamento, se disponíveis) aparecem em Analytics.
+- Operação em massa de ≥ 500 produtos sem perda de consistência.
+- Métricas de produto com cache e refresh programado.
+- Templates com histórico de aplicações (quais produtos receberam qual versão).
 
 ---
 
@@ -217,12 +221,15 @@ Migrations versionadas (sugestão: Prisma ou Alembic dependendo da stack escolhi
 
 | Risco                                                                 | Prob. | Impacto | Mitigação                                                                                   |
 | --------------------------------------------------------------------- | ----- | ------- | ------------------------------------------------------------------------------------------- |
-| Endpoint de publicação Shopee Video não existir                      | Média | Alto    | Gate explícito de descoberta antes da Fase 2; MVP tem valor isolado (upload + agendamento). |
-| Limites oficiais (30 MB / 60 s) inviabilizarem casos de uso do cliente | Média | Médio   | Comunicação clara no onboarding; validação local antecipa rejeição.                         |
-| Rate limits / banimento por uso indevido                              | Baixa | Alto    | Throttling por conta; respeitar `Retry-After`; monitorar taxa de 4xx/5xx.                   |
-| Compliance em trilhas alternativas (cookies/scraping)                 | Alta  | Alto    | Fora do MVP; exige parecer jurídico antes de qualquer prototipação.                         |
-| Vazamento de `access_token`                                           | Baixa | Alto    | Criptografia em repouso, secrets em vault, logs sanitizados, revisão periódica de acessos.  |
-| Dívida técnica do protótipo HTML bloqueando migração para React       | Média | Baixo   | Tratar `Index.html` como referência visual apenas; reescrever em componentes Vite+React desde o início. |
+| ~~Endpoint de publicação Shopee Video não existir~~ **(resolvido)**   | —     | —       | Escopo pivotado para vídeos de listing — ver `AUDIT.md`.                                     |
+| Limites oficiais (30 MB / 60 s) inviabilizarem casos de uso do cliente | Alta  | Médio   | Comunicação clara no onboarding; validação local antecipa rejeição.                         |
+| Rate limits não documentados                                         | Alta  | Médio   | Throttling por `partner_id` e `shop_id`; respeitar `error_busy`; circuit breaker por endpoint. |
+| Refresh token rotativo invalidado por concorrência                   | Média | Alto    | Update em transação atômica com lock na linha; reteste em falha de auth.                     |
+| Autorização CBSC exige aprovação Shopee                              | Média | Médio   | Onboarding separado; mensagem clara na UI; suporte a `shop_id` como caminho primário.        |
+| ToS Shopee Live proíbe automação                                     | —     | —       | Escopo do produto exclui feed/live permanentemente.                                          |
+| Vazamento de `access_token`                                           | Baixa | Alto    | AES-256-GCM em repouso, secrets em vault, logs sanitizados, rotação de `TOKEN_ENCRYPTION_KEY`. |
+| Sem webhook de fim de transcodificação                               | Alta  | Baixo   | Polling com backoff (5s→10s→20s, cap 2 min); métricas de tempo médio por conta.              |
+| Dívida técnica do protótipo HTML bloqueando migração para React       | —     | —       | `Index.html` mantido como referência; componentes Vite+React escritos do zero.              |
 
 Matriz completa e atualizações contínuas em `Prd.md` §11 + novos riscos descobertos em cada fase.
 

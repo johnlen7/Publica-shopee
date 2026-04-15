@@ -29,9 +29,15 @@ importers:
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
+      '@publica/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@publica/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@publica/shopee':
+        specifier: workspace:*
+        version: link:../../packages/shopee
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -124,9 +130,15 @@ importers:
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
+      '@publica/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@publica/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@publica/shopee':
+        specifier: workspace:*
+        version: link:../../packages/shopee
       bullmq:
         specifier: ^5.25.4
         version: 5.73.5
@@ -153,12 +165,34 @@ importers:
         specifier: ^5.6.3
         version: 5.9.3
 
+  packages/db:
+    dependencies:
+      '@prisma/client':
+        specifier: ^5.22.0
+        version: 5.22.0(prisma@5.22.0)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.19.17
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
   packages/shared:
     dependencies:
       zod:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/shopee:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.19.17
       typescript:
         specifier: ^5.6.3
         version: 5.9.3
