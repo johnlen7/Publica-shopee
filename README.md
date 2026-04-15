@@ -42,10 +42,18 @@ Sellers e times de conteúdo que operam em volume na Shopee enfrentam um process
 
 ```
 .
-├── Index.html   # Protótipo estático de UI (single-file, vanilla HTML/CSS/JS)
-├── Prd.md       # PRD completo em PT-BR
-├── README.md    # Este arquivo
-└── PLAN.md      # Plano de implementação por fases
+├── apps/
+│   ├── web/        # Frontend Vite + React + TypeScript
+│   ├── api/        # Backend Fastify + TypeScript + Prisma
+│   └── worker/     # Worker BullMQ (upload multipart, polling Shopee)
+├── packages/
+│   └── shared/     # Tipos, constantes e validações compartilhadas (Zod)
+├── prisma/         # Schema e migrations Postgres
+├── docker-compose.yml
+├── Index.html      # Protótipo estático de UI (referência visual)
+├── Prd.md          # PRD completo em PT-BR
+├── README.md       # Este arquivo
+└── PLAN.md         # Plano de implementação por fases
 ```
 
 ## Protótipo de UI
@@ -65,15 +73,17 @@ A navegação é feita via `data-page-target` e o script no final de `Index.html
 
 ## Arquitetura alvo
 
-| Camada         | Stack sugerida                                                            |
+| Camada         | Stack escolhida                                                           |
 | -------------- | ------------------------------------------------------------------------- |
-| Frontend       | Next.js / React, TailwindCSS, TanStack Query                              |
-| Backend/API    | Node.js (NestJS ou Fastify) **ou** Python (FastAPI)                       |
-| Fila/Workers   | BullMQ + Redis **ou** Celery + Redis                                      |
-| Banco          | PostgreSQL (Supabase Postgres como alternativa)                           |
-| Armazenamento  | S3-compatível para staging temporário dos vídeos                          |
-| Infra          | Docker, deploy em DigitalOcean / Railway / Render / VPS                   |
-| Observabilidade | Sentry + logs centralizados (ex.: Grafana Loki ou ELK)                   |
+| Frontend       | **Vite + React + TypeScript**, TailwindCSS, React Router, TanStack Query  |
+| Backend/API    | **Fastify + TypeScript**, Prisma ORM                                      |
+| Fila/Workers   | **BullMQ + Redis** (Node + TypeScript, compartilha Prisma com a API)      |
+| Banco          | PostgreSQL                                                                |
+| Armazenamento  | S3-compatível (MinIO em dev) para staging temporário dos vídeos           |
+| Infra          | Docker Compose em dev; deploy em DigitalOcean / Railway / Render / VPS    |
+| Observabilidade | Sentry + logs estruturados (Pino)                                        |
+
+> **Por que SPA (Vite) e não Next.js?** Este é um painel administrativo autenticado — não precisa de SSR, SEO ou rotas dinâmicas de conteúdo público. Vite entrega DX superior, build rápido e zero acoplamento a um framework full-stack. O backend fica isolado em Fastify, facilitando evolução independente.
 
 **Por que backend + workers?** O fluxo oficial de upload consultado (`init_video_upload` → `upload_video_part` → `complete_video_upload` → `get_video_upload_result`) é multipart com polling de transcodificação. Fazer isso somente no navegador seria frágil — requer fila assíncrona, retomada e idempotência.
 
@@ -105,18 +115,47 @@ A navegação é feita via `data-page-target` e o script no final de `Index.html
 
 Ver `Prd.md` §11 para a matriz completa de riscos.
 
-## Como executar o protótipo
+## Como executar
 
-O protótipo é um único arquivo HTML sem dependências de build. Opções:
+### Pré-requisitos
+
+- Node.js 22+
+- pnpm 10+
+- Docker + Docker Compose
+
+### Setup
 
 ```bash
-# Opção 1 — abrir direto no navegador
-xdg-open Index.html          # Linux
-open Index.html              # macOS
+# Instalar dependências
+pnpm install
 
-# Opção 2 — servidor local (evita problemas com fontes/CORS)
+# Subir infra local (postgres + redis + minio)
+docker compose up -d
+
+# Rodar migrations
+pnpm --filter api prisma migrate dev
+
+# Iniciar dev (web + api + worker em paralelo)
+pnpm dev
+```
+
+Portas padrão:
+
+| Serviço | Porta | URL                         |
+| ------- | ----- | --------------------------- |
+| web     | 5173  | http://localhost:5173       |
+| api     | 3333  | http://localhost:3333       |
+| postgres | 5432 | `postgres://publica:publica@localhost:5432/publica` |
+| redis   | 6379  | `redis://localhost:6379`    |
+| minio   | 9000  | http://localhost:9001 (console) |
+
+### Protótipo HTML de referência
+
+O `Index.html` original é mantido como referência visual. Para abrir:
+
+```bash
 python3 -m http.server 8080
-# Acesse http://localhost:8080/Index.html
+# http://localhost:8080/Index.html
 ```
 
 ## Documentação

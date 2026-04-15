@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "noEmit": true,
+    "types": ["node"],
+    "verbatimModuleSyntax": false
+  },
+  "include": ["src/**/*", "../../packages/shared/src/**/*"]
+}

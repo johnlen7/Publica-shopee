@@ -38,9 +38,9 @@ Cada fase tem exit criteria explícitos. Fase 2 só inicia se o gate de descober
 ### Entregáveis
 
 - Monorepo (`apps/web`, `apps/api`, `apps/worker`, `packages/shared`) ou repos separados — decidir no kickoff.
-- Frontend Next.js + TailwindCSS migrando a UI de `Index.html` para componentes React.
-- API (NestJS/Fastify ou FastAPI) com healthcheck e autenticação de usuário do workspace (não Shopee ainda).
-- Worker consumindo fila Redis/BullMQ com job de eco/teste.
+- Frontend **Vite + React + TypeScript + TailwindCSS** migrando a UI de `Index.html` para componentes React (SPA, sem SSR).
+- API **Fastify + TypeScript + Prisma** com healthcheck e autenticação de usuário do workspace (não Shopee ainda).
+- Worker **BullMQ** (Node + TS, compartilha Prisma com a API) com job de eco/teste.
 - Postgres com migrations versionadas.
 - Docker Compose local cobrindo api + worker + postgres + redis + minio (S3).
 - CI mínima: lint + typecheck + testes unitários.
@@ -222,7 +222,7 @@ Migrations versionadas (sugestão: Prisma ou Alembic dependendo da stack escolhi
 | Rate limits / banimento por uso indevido                              | Baixa | Alto    | Throttling por conta; respeitar `Retry-After`; monitorar taxa de 4xx/5xx.                   |
 | Compliance em trilhas alternativas (cookies/scraping)                 | Alta  | Alto    | Fora do MVP; exige parecer jurídico antes de qualquer prototipação.                         |
 | Vazamento de `access_token`                                           | Baixa | Alto    | Criptografia em repouso, secrets em vault, logs sanitizados, revisão periódica de acessos.  |
-| Dívida técnica do protótipo HTML bloqueando migração para React       | Média | Baixo   | Tratar `Index.html` como referência visual apenas; reescrever em componentes desde o início. |
+| Dívida técnica do protótipo HTML bloqueando migração para React       | Média | Baixo   | Tratar `Index.html` como referência visual apenas; reescrever em componentes Vite+React desde o início. |
 
 Matriz completa e atualizações contínuas em `Prd.md` §11 + novos riscos descobertos em cada fase.
 

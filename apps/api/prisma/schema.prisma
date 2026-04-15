@@ -1,0 +1,258 @@
+// Prisma schema — deriva do PRD §9 (Modelo de dados inicial)
+// Ajustes: IDs UUID, timestamps consistentes, enums para status.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// Workspace & Users (base multi-tenant)
+// ============================================================
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  timezone  String   @default("America/Sao_Paulo")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users           WorkspaceUser[]
+  shopeeAccounts  ShopeeAccount[]
+  videos          Video[]
+  templates       MetadataTemplate[]
+  auditLogs       AuditLog[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspaces WorkspaceUser[]
+  auditLogs  AuditLog[]
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+model WorkspaceUser {
+  id          String        @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(OPERATOR)
+  createdAt   DateTime      @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+// ============================================================
+// Shopee accounts (tokens criptografados)
+// ============================================================
+
+enum ShopeeAccountStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  NEEDS_RECONNECT
+}
+
+model ShopeeAccount {
+  id                     String              @id @default(uuid())
+  workspaceId            String
+  shopId                 String?
+  merchantId             String?
+  accessTokenEncrypted   String
+  refreshTokenEncrypted  String
+  tokenExpiresAt         DateTime
+  lastRefreshedAt        DateTime?
+  status                 ShopeeAccountStatus @default(ACTIVE)
+  connectedAt            DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  videoUploads VideoUpload[]
+  publishJobs  PublishJob[]
+
+  @@index([workspaceId])
+  @@index([tokenExpiresAt])
+}
+
+// ============================================================
+// Videos & Uploads
+// ============================================================
+
+enum VideoValidationStatus {
+  PENDING
+  VALID
+  INVALID
+}
+
+model Video {
+  id               String                @id @default(uuid())
+  workspaceId      String
+  originalFilename String
+  mimeType         String
+  fileSizeBytes    BigInt
+  durationSeconds  Int?
+  md5Hash          String?
+  localStoragePath String?
+  validationStatus VideoValidationStatus @default(PENDING)
+  validationError  String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  uploads     VideoUpload[]
+  metadata    VideoMetadata?
+  publishJobs PublishJob[]
+
+  @@index([workspaceId])
+}
+
+enum UploadStatus {
+  PENDING
+  INITIATED
+  UPLOADING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum TranscodingStatus {
+  NOT_STARTED
+  TRANSCODING
+  SUCCEEDED
+  FAILED
+}
+
+model VideoUpload {
+  id                  String            @id @default(uuid())
+  videoId             String
+  shopeeAccountId     String
+  shopeeVideoUploadId String?
+  uploadStatus        UploadStatus      @default(PENDING)
+  transcodingStatus   TranscodingStatus @default(NOT_STARTED)
+  remoteVideoUrl      String?
+  remoteThumbnailUrl  String?
+  failureReason       String?
+  startedAt           DateTime?
+  finishedAt          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  video         Video         @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  shopeeAccount ShopeeAccount @relation(fields: [shopeeAccountId], references: [id], onDelete: Restrict)
+
+  @@index([videoId])
+  @@index([shopeeAccountId])
+  @@index([uploadStatus])
+}
+
+// ============================================================
+// Metadados
+// ============================================================
+
+model MetadataTemplate {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  version     Int      @default(1)
+  title       String?
+  description String?
+  hashtags    String[] @default([])
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  metadata  VideoMetadata[]
+
+  @@index([workspaceId])
+}
+
+model VideoMetadata {
+  id          String   @id @default(uuid())
+  videoId     String   @unique
+  templateId  String?
+  title       String
+  description String?
+  hashtags    String[] @default([])
+  category    String?
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  video    Video             @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  template MetadataTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+}
+
+// ============================================================
+// Jobs de publicação
+// ============================================================
+
+enum PublishJobStatus {
+  SCHEDULED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  PENDING_PUBLISH_API
+}
+
+model PublishJob {
+  id              String           @id @default(uuid())
+  videoId         String
+  shopeeAccountId String
+  scheduledFor    DateTime
+  timezone        String           @default("America/Sao_Paulo")
+  status          PublishJobStatus @default(SCHEDULED)
+  retriesCount    Int              @default(0)
+  lastError       String?
+  createdById     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  video         Video         @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  shopeeAccount ShopeeAccount @relation(fields: [shopeeAccountId], references: [id], onDelete: Restrict)
+
+  @@index([scheduledFor])
+  @@index([status])
+}
+
+// ============================================================
+// Auditoria
+// ============================================================
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  workspaceId String?
+  actorId     String?
+  entityType  String
+  entityId    String
+  action      String
+  payload     Json?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  actor     User?      @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
