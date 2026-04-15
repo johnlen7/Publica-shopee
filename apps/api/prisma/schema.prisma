@@ -26,6 +26,8 @@ model Workspace {
   videos          Video[]
   templates       MetadataTemplate[]
   auditLogs       AuditLog[]
+  rpaJobs         RpaJob[]
+  rpaConsent      RpaConsent?
 }
 
 model User {
@@ -238,6 +240,64 @@ model PublishJob {
 // ============================================================
 // Auditoria
 // ============================================================
+
+// ============================================================
+// RPA (trilha não-oficial via Playwright) — módulo opt-in
+// Ver AUDIT.md "Anexo — Trilha não-oficial (RPA)"
+// ============================================================
+
+enum RpaJobStatus {
+  PENDING
+  CLAIMED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model RpaJob {
+  id             String       @id @default(uuid())
+  workspaceId    String
+  videoId        String?
+  /// Caminho local do arquivo na máquina do agente (enviado pela UI)
+  videoLocalPath String?
+  caption        String
+  hashtags       String[]     @default([])
+  scheduledFor   DateTime?
+  status         RpaJobStatus @default(PENDING)
+  /// Identificador do agente RPA que reivindicou o job
+  claimedBy      String?
+  claimedAt      DateTime?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  /// Screenshots + logs do agente (retornados ao final)
+  result         Json?
+  lastError      String?
+  retriesCount   Int          @default(0)
+  createdById    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+/// Consentimento por workspace para habilitar RPA.
+/// Um registro por workspace, criado somente quando um OWNER/ADMIN
+/// aceita explicitamente os riscos descritos em AUDIT.md.
+model RpaConsent {
+  id            String   @id @default(uuid())
+  workspaceId   String   @unique
+  acceptedById  String
+  acceptedAt    DateTime @default(now())
+  /// Versão do texto de aviso aceita, para rastreabilidade
+  noticeVersion String
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
 
 model AuditLog {
   id          String   @id @default(uuid())

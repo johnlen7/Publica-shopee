@@ -16,6 +16,9 @@ CREATE TYPE "TranscodingStatus" AS ENUM ('NOT_STARTED', 'TRANSCODING', 'SUCCEEDE
 -- CreateEnum
 CREATE TYPE "PublishJobStatus" AS ENUM ('SCHEDULED', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'PENDING_PUBLISH_API');
 
+-- CreateEnum
+CREATE TYPE "RpaJobStatus" AS ENUM ('PENDING', 'CLAIMED', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED');
+
 -- CreateTable
 CREATE TABLE "Workspace" (
     "id" TEXT NOT NULL,
@@ -154,6 +157,41 @@ CREATE TABLE "PublishJob" (
 );
 
 -- CreateTable
+CREATE TABLE "RpaJob" (
+    "id" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
+    "videoId" TEXT,
+    "videoLocalPath" TEXT,
+    "caption" TEXT NOT NULL,
+    "hashtags" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "scheduledFor" TIMESTAMP(3),
+    "status" "RpaJobStatus" NOT NULL DEFAULT 'PENDING',
+    "claimedBy" TEXT,
+    "claimedAt" TIMESTAMP(3),
+    "startedAt" TIMESTAMP(3),
+    "finishedAt" TIMESTAMP(3),
+    "result" JSONB,
+    "lastError" TEXT,
+    "retriesCount" INTEGER NOT NULL DEFAULT 0,
+    "createdById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "RpaJob_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "RpaConsent" (
+    "id" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
+    "acceptedById" TEXT NOT NULL,
+    "acceptedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "noticeVersion" TEXT NOT NULL,
+
+    CONSTRAINT "RpaConsent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "AuditLog" (
     "id" TEXT NOT NULL,
     "workspaceId" TEXT,
@@ -207,6 +245,18 @@ CREATE INDEX "PublishJob_scheduledFor_idx" ON "PublishJob"("scheduledFor");
 CREATE INDEX "PublishJob_status_idx" ON "PublishJob"("status");
 
 -- CreateIndex
+CREATE INDEX "RpaJob_workspaceId_idx" ON "RpaJob"("workspaceId");
+
+-- CreateIndex
+CREATE INDEX "RpaJob_status_idx" ON "RpaJob"("status");
+
+-- CreateIndex
+CREATE INDEX "RpaJob_scheduledFor_idx" ON "RpaJob"("scheduledFor");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RpaConsent_workspaceId_key" ON "RpaConsent"("workspaceId");
+
+-- CreateIndex
 CREATE INDEX "AuditLog_workspaceId_idx" ON "AuditLog"("workspaceId");
 
 -- CreateIndex
@@ -247,6 +297,12 @@ ALTER TABLE "PublishJob" ADD CONSTRAINT "PublishJob_videoId_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "PublishJob" ADD CONSTRAINT "PublishJob_shopeeAccountId_fkey" FOREIGN KEY ("shopeeAccountId") REFERENCES "ShopeeAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RpaJob" ADD CONSTRAINT "RpaJob_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RpaConsent" ADD CONSTRAINT "RpaConsent_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE SET NULL ON UPDATE CASCADE;

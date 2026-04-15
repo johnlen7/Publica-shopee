@@ -5,6 +5,7 @@ import { UploadPage } from './pages/Upload';
 import { IntegrationsPage } from './pages/Integrations';
 import { SchedulePage } from './pages/Schedule';
 import { TemplatesPage } from './pages/Templates';
+import { RpaBotPage } from './pages/RpaBot';
 import { PlaceholderPage } from './pages/Placeholder';
 
 export function App(): JSX.Element {
@@ -16,6 +17,7 @@ export function App(): JSX.Element {
         <Route path="agendamentos" element={<SchedulePage />} />
         <Route path="templates" element={<TemplatesPage />} />
         <Route path="integracoes" element={<IntegrationsPage />} />
+        <Route path="rpa" element={<RpaBotPage />} />
         <Route
           path="analytics"
           element={

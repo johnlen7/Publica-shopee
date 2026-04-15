@@ -8,6 +8,7 @@ const nav = [
   { to: '/templates', label: 'Templates' },
   { to: '/analytics', label: 'Analytics' },
   { to: '/integracoes', label: 'Integrações' },
+  { to: '/rpa', label: 'RPA (feed)' },
   { to: '/config', label: 'Configurações' },
 ];
 

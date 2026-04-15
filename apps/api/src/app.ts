@@ -11,6 +11,7 @@ import { scheduleRoutes } from './routes/schedule.js';
 import { importRoutes } from './routes/import.js';
 import { integrationRoutes } from './routes/integrations.js';
 import { uploadRoutes } from './routes/uploads.js';
+import { rpaRoutes } from './routes/rpa.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -53,6 +54,7 @@ export async function buildApp() {
   await app.register(importRoutes);
   await app.register(integrationRoutes);
   await app.register(uploadRoutes);
+  await app.register(rpaRoutes);
 
   return app;
 }

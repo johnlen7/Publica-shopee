@@ -145,6 +145,52 @@ Resposta padrão Open API v2:
 
 ---
 
+## Anexo — Trilha não-oficial (RPA) para feed Shopee Video
+
+> ⚠️ **Este anexo descreve um caminho NÃO oficial, fora do ToS recomendado.** Leia integralmente antes de usar.
+
+Como a Shopee não expõe API pública para o feed Shopee Video (TikTok-like), alguns desenvolvedores implementam **RPA** (Robotic Process Automation) — um robô de navegador (Playwright/Selenium) que opera o Seller Centre como se fosse um humano. Este projeto oferece a infraestrutura para esse caminho como **módulo opcional separado** (`apps/rpa-bot`), explicitamente marcado como não-oficial.
+
+### Riscos que o operador precisa assumir
+
+| Risco                                      | Severidade | Observação                                                                                                   |
+| ------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------ |
+| Violação do ToS da Shopee                 | Alta       | ToS Shopee Live veta automação explícita. Para feed Video, o espírito é o mesmo. Seller pode ser banido.     |
+| Detecção de automação                    | Alta       | `navigator.webdriver`, fingerprinting de canvas/WebGL/fonts, timing, CDP traces. "Stealth" é corrida perpétua. |
+| Mudança de layout quebra robô             | Alta       | Selectors CSS/XPath frágeis; cada atualização do Seller Centre pode parar tudo.                              |
+| Credenciais / sessão                      | Média      | Login automatizado = risco. Mitigação: sessão persistente + login manual inicial.                            |
+| IP compartilhado de SaaS é marcado       | Alta       | Rodar no servidor → mesmo IP para todos os sellers → bloqueio rápido. Mitigação: **agente local**.           |
+| Ausência de SLA e de suporte             | Alta       | Se quebrar, não há a quem reclamar.                                                                          |
+
+### Decisões arquiteturais para mitigar (não eliminar) riscos
+
+1. **Módulo separado**: `apps/rpa-bot` é um app Node.js que o seller **instala na máquina local dele**, não roda no SaaS.
+2. **Persistent context**: `--user-data-dir` do Playwright salva sessão; seller loga manualmente uma vez.
+3. **headful por padrão**: `headless: false` para o seller ver o que está acontecendo (auditoria visual) e reduzir flags anti-automação.
+4. **Polling pull, não push**: bot puxa jobs pendentes da API (`GET /rpa/jobs/pending`) em vez de API empurrar — reduz superfície.
+5. **Delay humanizado**: `random 300–1200 ms` entre ações; nada de clicks rajada.
+6. **Isolamento de dados**: tabela `RpaJob` separada; audit log marca toda ação como `uses_unofficial_automation = true`.
+7. **Opt-in explícito**: feature flag + consentimento registrado no workspace antes de habilitar.
+8. **Kill switch**: cancelar job a qualquer momento, pausar worker, desinstalar bot.
+
+### O que o RPA faz concretamente
+
+Fluxo híbrido recomendado:
+
+```
+1. Upload OFICIAL via API (apps/worker, media_space)
+   → obtém video_upload_id + remoteVideoUrl
+2. RPA abre Seller Centre → Shopee Video → "Create Post"
+3. RPA faz upload do arquivo local (mesmo binário que foi ao media_space)
+   OU seleciona da media library se o video_upload_id aparecer lá
+4. RPA preenche caption, hashtags, agendamento
+5. RPA clica "Publicar"
+```
+
+Implementação em `apps/rpa-bot/README.md`.
+
+---
+
 ## Conclusão
 
 O projeto é **viável, mas com escopo reposicionado**. A versão ajustada é:
@@ -160,4 +206,4 @@ O projeto é **viável, mas com escopo reposicionado**. A versão ajustada é:
 - Importação CSV/XLSX para operação em lote
 - RBAC por workspace, auditoria completa
 
-Nenhum recurso do produto depende de endpoints não-oficiais ou de automação de UI.
+Adicionalmente, como **módulo opt-in separado e de responsabilidade do operador**, o `apps/rpa-bot` oferece uma trilha não-oficial via Playwright para o feed Shopee Video — com os riscos de ToS e manutenção explicitamente documentados acima.
